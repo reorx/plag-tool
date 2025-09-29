@@ -1,6 +1,5 @@
 """Core plagiarism detection logic."""
 
-import logging
 import chardet
 from pathlib import Path
 from typing import List, Tuple, Optional, Dict, Any
@@ -10,8 +9,9 @@ from .config import Config
 from .chunker import TextChunk, TextChunker
 from .embeddings import EmbeddingService
 from .vector_store import VectorStore, SimilarityMatch
+from .log import base_logger
 
-logger = logging.getLogger(__name__)
+logger = base_logger.getChild('detector')
 
 
 class Match(BaseModel):
@@ -131,6 +131,7 @@ class PlagiarismDetector:
         else:
             source_chunks = self.chunker.chunk_text(source_text, "source")
             target_chunks = self.chunker.chunk_text(target_text, "target")
+        print('source_chunks', source_chunks)
 
         logger.info(f"Created {len(source_chunks)} source chunks and {len(target_chunks)} target chunks")
 

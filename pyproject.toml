@@ -22,6 +22,8 @@ dependencies = [
     "numpy",
     "python-dotenv",
     "chardet",  # for encoding detection
+    "tiktoken",  # for accurate token counting
+    "tenacity",  # for retry logic
 ]
 
 [project.optional-dependencies]

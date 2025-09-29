@@ -95,6 +95,8 @@ Preview how a file will be chunked without running detection:
 
 ```bash
 plag-tool analyze document.txt --chunk-size 300 --overlap 50
+
+plag-tool compare examples/sample_source.txt examples/sample_target.txt -t 0.75
 ```
 
 #### `test-connection` - Test API connection

@@ -1,7 +1,6 @@
 """Command-line interface for plag-tool."""
 
 import sys
-import logging
 from pathlib import Path
 import click
 
@@ -10,15 +9,17 @@ from ..core import (
     PlagiarismDetector,
     ReportGenerator
 )
+from ..core.log import set_logger
 
 
 # Configure logging
 def setup_logging(verbose: bool):
     """Set up logging configuration."""
-    level = logging.DEBUG if verbose else logging.INFO
-    logging.basicConfig(
+    level = 'DEBUG' if verbose else 'INFO'
+    set_logger(
+        'plag_tool',
         level=level,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         datefmt='%H:%M:%S'
     )
 
@@ -36,13 +37,13 @@ def cli():
 @click.option('--output', '-o', type=click.Path(path_type=Path), help='Output file path')
 @click.option('--format', '-f', type=click.Choice(['json', 'html', 'text']), default='json', help='Output format')
 @click.option('--threshold', '-t', type=float, default=0.85, help='Similarity threshold (0-1)')
-@click.option('--chunk-size', '-c', type=int, default=500, help='Chunk size in characters')
-@click.option('--overlap', type=int, default=100, help='Overlap size in characters')
+@click.option('--chunk-size', '-c', type=int, default=100, help='Chunk size in characters')
+@click.option('--overlap', type=int, default=10, help='Overlap size in characters')
 @click.option('--sentence-boundaries', '-s', is_flag=True, default=True, help='Use sentence-aware chunking')
 @click.option('--verbose', '-v', is_flag=True, help='Enable verbose output')
 @click.option('--api-key', envvar='OPENAI_API_KEY', help='OpenAI API key (can be set via OPENAI_API_KEY env var)')
 @click.option('--base-url', envvar='OPENAI_BASE_URL', help='OpenAI base URL (can be set via OPENAI_BASE_URL env var)')
-@click.option('--model', envvar='OPENAI_MODEL', default='text-embedding-3-small', help='Embedding model to use')
+@click.option('--model', envvar='OPENAI_DEFAULT_EMBEDDING_MODEL', default='text-embedding-3-small', help='Embedding model to use')
 def compare(
     source_file: Path,
     target_file: Path,

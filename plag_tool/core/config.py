@@ -69,6 +69,16 @@ class Config(BaseModel):
         description="Delay between retries in seconds"
     )
 
+    # Embedding batch control settings
+    embedding_batch_max_tokens: int = Field(
+        default_factory=lambda: int(os.getenv("EMBEDDING_BATCH_MAX_TOKENS", "8000")),
+        description="Maximum tokens per embedding batch (10% safety margin applied automatically)"
+    )
+    embedding_batch_max_items: int = Field(
+        default_factory=lambda: int(os.getenv("EMBEDDING_BATCH_MAX_ITEMS", "100")),
+        description="Maximum items per embedding batch"
+    )
+
     def validate_api_key(self) -> bool:
         """Check if API key is configured."""
         return bool(self.openai_api_key)

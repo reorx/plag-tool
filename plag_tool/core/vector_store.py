@@ -1,6 +1,5 @@
 """Vector store module using ChromaDB for similarity search."""
 
-import logging
 import uuid
 from typing import List, Dict, Any, Optional
 import numpy as np
@@ -9,8 +8,9 @@ from chromadb.config import Settings
 from chromadb.utils import embedding_functions
 
 from .chunker import TextChunk
+from .log import base_logger
 
-logger = logging.getLogger(__name__)
+logger = base_logger.getChild('vector_store')
 
 
 class SimilarityMatch:

@@ -1,0 +1,2 @@
+- better to use langchain's recursive splitter, and only split lines
+- use jieba to enhance exact match words find
