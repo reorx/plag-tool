@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "plag-tool"
+version = "0.1.0"
+description = "A plagiarism detection tool for Chinese text using vector embeddings"
+authors = [{name = "Your Name", email = "your@email.com"}]
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "openai>=1.0.0",
+    "chromadb>=0.4.0",
+    "click>=8.0.0",
+    "pydantic>=2.0.0",
+    "numpy",
+    "python-dotenv",
+    "chardet",  # for encoding detection
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+]
+
+[project.scripts]
+plag-tool = "plag_tool.cli.main:cli"
+
+[tool.setuptools.packages.find]
+include = ["plag_tool*"]
