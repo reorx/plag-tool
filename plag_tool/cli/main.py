@@ -44,6 +44,7 @@ def cli():
 @click.option('--api-key', envvar='OPENAI_API_KEY', help='OpenAI API key (can be set via OPENAI_API_KEY env var)')
 @click.option('--base-url', envvar='OPENAI_BASE_URL', help='OpenAI base URL (can be set via OPENAI_BASE_URL env var)')
 @click.option('--model', envvar='OPENAI_DEFAULT_EMBEDDING_MODEL', default='text-embedding-3-small', help='Embedding model to use')
+@click.option('--no-rich-display', is_flag=True, help='Disable rich formatted output')
 def compare(
     source_file: Path,
     target_file: Path,
@@ -56,7 +57,8 @@ def compare(
     verbose: bool,
     api_key: str,
     base_url: str,
-    model: str
+    model: str,
+    no_rich_display: bool
 ):
     """
     Compare two files for plagiarism detection.
@@ -89,7 +91,8 @@ def compare(
     # Set default output path if not provided
     if not output:
         source_stem = source_file.stem
-        output = Path(f"report_{source_stem}.{format}")
+        target_stem = target_file.stem
+        output = Path(f"{source_stem}-{target_stem}.report.{format}")
 
     click.echo(f"🔍 Comparing files for plagiarism...")
     click.echo(f"   Source: {source_file}")
@@ -119,16 +122,23 @@ def compare(
     generator = ReportGenerator()
     generator.save_report(report, str(output), format)
 
-    # Display summary
-    click.echo(f"\n✅ Analysis complete!")
-    click.echo(f"   Plagiarism: {report.plagiarism_percentage:.1f}%")
-    click.echo(f"   Matches found: {report.total_matches}")
-    click.echo(f"   Report saved: {output}")
+    # Display results
+    if no_rich_display:
+        # Use plain text display
+        click.echo(f"\n✅ Analysis complete!")
+        click.echo(f"   Plagiarism: {report.plagiarism_percentage:.1f}%")
+        click.echo(f"   Matches found: {report.total_matches}")
+        click.echo(f"   Report saved: {output}")
 
-    # Show cost estimation if available
-    if 'cost_estimation' in report.metadata:
-        cost = report.metadata['cost_estimation']
-        click.echo(f"   Estimated cost: ${cost.get('estimated_cost_usd', 0):.4f} USD")
+        # Show cost estimation if available
+        if 'cost_estimation' in report.metadata:
+            cost = report.metadata['cost_estimation']
+            click.echo(f"   Estimated cost: ${cost.get('estimated_cost_usd', 0):.4f} USD")
+    else:
+        # Use rich display
+        from .display import display_report
+        click.echo()  # Add spacing before rich output
+        display_report(report, str(output), max_matches=10)
 
 
 @cli.command()

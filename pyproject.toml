@@ -24,6 +24,7 @@ dependencies = [
     "chardet",  # for encoding detection
     "tiktoken",  # for accurate token counting
     "tenacity",  # for retry logic
+    "rich>=13.0.0",  # for enhanced CLI display
 ]
 
 [project.optional-dependencies]
