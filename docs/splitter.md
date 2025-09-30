@@ -1,8 +1,8 @@
-# 文本分块器 (Chunker) 详解
+# 文本分割器 (Splitter) 详解
 
 ## 文件概述
 
-`plag_tool/core/chunker.py` 实现了文本分块（chunking）功能，用于将长文本切分成多个重叠的小段，便于后续的向量化和相似度比较。这是抄袭检测系统的基础模块。
+`plag_tool/core/splitter.py` 实现了文本分块（chunking）功能，用于将长文本切分成多个重叠的小段，便于后续的向量化和相似度比较。这是抄袭检测系统的基础模块。
 
 ## 主要类
 
@@ -24,9 +24,9 @@ class TextChunk(BaseModel):
 - `_compute_hash()`: 计算文本的SHA256哈希值（取前16位），用于缓存和去重
 - `overlaps_with()`: 判断两个块是否重叠，支持容错距离参数
 
-### 2. `TextChunker` 类
+### 2. `TextSplitter` 类
 
-核心的文本分块器类，提供多种分块策略。
+核心的文本分割器类，提供多种分块策略。
 
 **初始化参数**：
 - `chunk_size`: 每个块的大小（字符数）
@@ -166,10 +166,10 @@ def merge_small_chunks(self, chunks: List[TextChunk], min_size: int = 100):
 1. **文档预处理阶段**
    ```python
    # 源文档分块
-   source_chunks = chunker.chunk_with_sentences(source_text, "source")
+   source_chunks = splitter.chunk_with_sentences(source_text, "source")
 
    # 目标文档分块
-   target_chunks = chunker.chunk_with_sentences(target_text, "target")
+   target_chunks = splitter.chunk_with_sentences(target_text, "target")
    ```
 
 2. **向量化准备**
@@ -188,31 +188,31 @@ def merge_small_chunks(self, chunks: List[TextChunk], min_size: int = 100):
 
 ### 基本使用
 ```python
-from plag_tool.core.chunker import TextChunker
+from plag_tool.core.splitter import TextSplitter
 
-# 创建分块器
-chunker = TextChunker(chunk_size=500, overlap=100)
+# 创建分割器
+splitter = TextSplitter(chunk_size=500, overlap=100)
 
 # 基本分块
-chunks = chunker.chunk_text(text, "document_1")
+chunks = splitter.chunk_text(text, "document_1")
 
 # 句子边界分块（推荐）
-chunks = chunker.chunk_with_sentences(text, "document_1")
+chunks = splitter.chunk_with_sentences(text, "document_1")
 
 # 合并小块
-merged_chunks = chunker.merge_small_chunks(chunks, min_size=50)
+merged_chunks = splitter.merge_small_chunks(chunks, min_size=50)
 ```
 
 ### 参数调优示例
 ```python
 # 适合短文本的配置
-short_text_chunker = TextChunker(chunk_size=200, overlap=50)
+short_text_splitter = TextSplitter(chunk_size=200, overlap=50)
 
 # 适合长文档的配置
-long_text_chunker = TextChunker(chunk_size=800, overlap=200)
+long_text_splitter = TextSplitter(chunk_size=800, overlap=200)
 
 # 高精度检测配置（重叠更多）
-precision_chunker = TextChunker(chunk_size=400, overlap=150)
+precision_splitter = TextSplitter(chunk_size=400, overlap=150)
 ```
 
 ## 性能考虑
@@ -232,11 +232,11 @@ precision_chunker = TextChunker(chunk_size=400, overlap=150)
 
 ## 总结
 
-文本分块器是抄袭检测系统的核心基础模块，通过智能的分割策略和重叠设计，确保了：
+文本分割器是抄袭检测系统的核心基础模块，通过智能的分割策略和重叠设计，确保了：
 
 - **语义完整性**：句子边界分割保持语义单元完整
 - **检测完整性**：重叠设计防止边界抄袭遗漏
 - **计算效率**：合适的块大小平衡了精度和性能
 - **扩展性**：支持多种分块策略，适应不同场景需求
 
-正确理解和配置分块器参数，对整个抄袭检测系统的性能有决定性影响。
+正确理解和配置分割器参数，对整个抄袭检测系统的性能有决定性影响。

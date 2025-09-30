@@ -1,17 +1,17 @@
-"""Tests for the chunker module."""
+"""Tests for the splitter module."""
 
 import pytest
-from plag_tool.core.chunker import TextChunker, TextChunk
+from plag_tool.core.splitter import TextSplitter, TextChunk
 
 
-class TestTextChunker:
-    """Test cases for TextChunker class."""
+class TestTextSplitter:
+    """Test cases for TextSplitter class."""
 
     def test_chunk_text_basic(self):
         """Test basic text chunking functionality."""
-        chunker = TextChunker(chunk_size=10, overlap=3)
+        splitter = TextSplitter(chunk_size=10, overlap=3)
         text = "这是一段测试文本用于演示分块算法"
-        chunks = chunker.chunk_text(text, "test_doc")
+        chunks = splitter.chunk_text(text, "test_doc")
 
         # Check we got chunks
         assert len(chunks) > 1
@@ -29,9 +29,9 @@ class TestTextChunker:
 
     def test_chunk_text_with_overlap(self):
         """Test that overlap is working correctly."""
-        chunker = TextChunker(chunk_size=10, overlap=3)
+        splitter = TextSplitter(chunk_size=10, overlap=3)
         text = "abcdefghijklmnopqrstuvwxyz"
-        chunks = chunker.chunk_text(text, "overlap_test")
+        chunks = splitter.chunk_text(text, "overlap_test")
 
         # Should have overlap between consecutive chunks
         assert len(chunks) >= 2
@@ -47,16 +47,16 @@ class TestTextChunker:
 
     def test_chunk_text_empty(self):
         """Test chunking empty text."""
-        chunker = TextChunker(chunk_size=10, overlap=3)
-        chunks = chunker.chunk_text("", "empty_doc")
+        splitter = TextSplitter(chunk_size=10, overlap=3)
+        chunks = splitter.chunk_text("", "empty_doc")
 
         assert len(chunks) == 0
 
     def test_chunk_with_sentences_chinese(self):
         """Test sentence-aware chunking with Chinese text."""
-        chunker = TextChunker(chunk_size=50, overlap=10)
+        splitter = TextSplitter(chunk_size=50, overlap=10)
         text = "人工智能正在改变世界。深度学习是其重要分支。神经网络模型表现出色。"
-        chunks = chunker.chunk_with_sentences(text, "chinese_doc")
+        chunks = splitter.chunk_with_sentences(text, "chinese_doc")
 
         # Should create chunks
         assert len(chunks) > 0
@@ -70,9 +70,9 @@ class TestTextChunker:
 
     def test_chunk_with_sentences_english(self):
         """Test sentence-aware chunking with English text."""
-        chunker = TextChunker(chunk_size=30, overlap=5)
+        splitter = TextSplitter(chunk_size=30, overlap=5)
         text = "AI is transforming the world. Deep learning is important. Neural networks perform well."
-        chunks = chunker.chunk_with_sentences(text, "english_doc")
+        chunks = splitter.chunk_with_sentences(text, "english_doc")
 
         # Should create chunks
         assert len(chunks) > 0
@@ -93,29 +93,29 @@ class TestTextChunker:
 
         # Negative chunk_size
         with pytest.raises(ValueError, match="chunk_size must be positive"):
-            TextChunker(chunk_size=-1, overlap=0)
+            TextSplitter(chunk_size=-1, overlap=0)
 
         # Zero chunk_size
         with pytest.raises(ValueError, match="chunk_size must be positive"):
-            TextChunker(chunk_size=0, overlap=0)
+            TextSplitter(chunk_size=0, overlap=0)
 
         # Negative overlap
         with pytest.raises(ValueError, match="overlap cannot be negative"):
-            TextChunker(chunk_size=10, overlap=-1)
+            TextSplitter(chunk_size=10, overlap=-1)
 
         # Overlap equals chunk_size
         with pytest.raises(ValueError, match="overlap must be less than chunk_size"):
-            TextChunker(chunk_size=10, overlap=10)
+            TextSplitter(chunk_size=10, overlap=10)
 
         # Overlap greater than chunk_size
         with pytest.raises(ValueError, match="overlap must be less than chunk_size"):
-            TextChunker(chunk_size=10, overlap=15)
+            TextSplitter(chunk_size=10, overlap=15)
 
     def test_chunk_text_single_chunk(self):
         """Test chunking text that fits in a single chunk."""
-        chunker = TextChunker(chunk_size=100, overlap=10)
+        splitter = TextSplitter(chunk_size=100, overlap=10)
         text = "短文本"
-        chunks = chunker.chunk_text(text, "single_chunk")
+        chunks = splitter.chunk_text(text, "single_chunk")
 
         assert len(chunks) == 1
         assert chunks[0].text == text
@@ -124,9 +124,9 @@ class TestTextChunker:
 
     def test_chunk_consistency(self):
         """Test that chunks maintain consistency properties."""
-        chunker = TextChunker(chunk_size=20, overlap=5)
+        splitter = TextSplitter(chunk_size=20, overlap=5)
         text = "这是一个相对较长的中文测试文本，用来验证分块算法的一致性和正确性。"
-        chunks = chunker.chunk_text(text, "consistency_test")
+        chunks = splitter.chunk_text(text, "consistency_test")
 
         # Verify all chunks have required properties
         for i, chunk in enumerate(chunks):

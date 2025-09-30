@@ -9,7 +9,7 @@ import tiktoken
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from .config import Config
-from .chunker import TextChunk
+from .splitter import TextChunk
 from .log import base_logger
 
 logger = base_logger.getChild('embeddings')

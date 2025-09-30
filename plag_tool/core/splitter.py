@@ -1,4 +1,4 @@
-"""Text chunking module for splitting documents into overlapping segments."""
+"""Text splitting module for splitting documents into overlapping segments."""
 
 import hashlib
 from typing import List, Optional
@@ -35,12 +35,12 @@ class TextChunk(BaseModel):
         )
 
 
-class TextChunker:
+class TextSplitter:
     """Handles text segmentation with sliding window approach."""
 
     def __init__(self, chunk_size: int = 500, overlap: int = 100):
         """
-        Initialize the text chunker.
+        Initialize the text splitter.
 
         Args:
             chunk_size: Size of each chunk in characters

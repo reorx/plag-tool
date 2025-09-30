@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 from plag_tool.core.config import Config
 from plag_tool.core.embeddings import EmbeddingService
-from plag_tool.core.chunker import TextChunk
+from plag_tool.core.splitter import TextChunk
 
 # Load environment variables at module level
 load_dotenv()

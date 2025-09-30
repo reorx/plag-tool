@@ -6,7 +6,7 @@ from typing import List, Tuple, Optional, Dict, Any
 from pydantic import BaseModel, Field
 
 from .config import Config
-from .chunker import TextChunk, TextChunker
+from .splitter import TextChunk, TextSplitter
 from .embeddings import EmbeddingService
 from .vector_store import VectorStore, SimilarityMatch
 from .log import base_logger
@@ -52,7 +52,7 @@ class PlagiarismDetector:
             config: Configuration object (uses defaults if not provided)
         """
         self.config = config or Config()
-        self.chunker = TextChunker(
+        self.splitter = TextSplitter(
             chunk_size=self.config.chunk_size,
             overlap=self.config.overlap_size
         )
@@ -124,13 +124,13 @@ class PlagiarismDetector:
         collection_name = f"compare_{int(time.time() * 1000)}"
         self.vector_store.create_collection(collection_name)
 
-        # Chunk texts
+        # Split texts into chunks
         if use_sentence_boundaries:
-            source_chunks = self.chunker.chunk_with_sentences(source_text, "source")
-            target_chunks = self.chunker.chunk_with_sentences(target_text, "target")
+            source_chunks = self.splitter.chunk_with_sentences(source_text, "source")
+            target_chunks = self.splitter.chunk_with_sentences(target_text, "target")
         else:
-            source_chunks = self.chunker.chunk_text(source_text, "source")
-            target_chunks = self.chunker.chunk_text(target_text, "target")
+            source_chunks = self.splitter.chunk_text(source_text, "source")
+            target_chunks = self.splitter.chunk_text(target_text, "target")
         print('source_chunks', source_chunks)
 
         logger.info(f"Created {len(source_chunks)} source chunks and {len(target_chunks)} target chunks")

@@ -1,4 +1,4 @@
-"""Integration test for chunker and embedding service."""
+"""Integration test for splitter and embedding service."""
 
 import os
 import pytest
@@ -6,7 +6,7 @@ import numpy as np
 from dotenv import load_dotenv
 
 from plag_tool.core.config import Config
-from plag_tool.core.chunker import TextChunker
+from plag_tool.core.splitter import TextSplitter
 from plag_tool.core.embeddings import EmbeddingService
 from plag_tool.core.log import set_logger
 
@@ -18,10 +18,10 @@ load_dotenv()
     not os.getenv("OPENAI_API_KEY") and not os.getenv("OPENAI_DEFAULT_EMBEDDING_MODEL"),
     reason="OPENAI_API_KEY not configured - skipping integration test"
 )
-def test_chunker_with_embedding_integration():
+def test_splitter_with_embedding_integration():
     """
-    Integration test that combines chunker and embedding service.
-    Uses a Chinese text of about 200 characters, chunks it, then embeds the chunks.
+    Integration test that combines splitter and embedding service.
+    Uses a Chinese text of about 200 characters, splits it, then embeds the chunks.
     """
     # Configure logging to DEBUG level to see chunk details
     set_logger(
@@ -44,12 +44,12 @@ def test_chunker_with_embedding_integration():
     print(f"\n📝 Original text ({len(chinese_text)} characters):")
     print(f"'{chinese_text}'")
 
-    # Initialize chunker with reasonable parameters
-    chunker = TextChunker(chunk_size=50, overlap=10)
-    print(f"\n🔄 Chunking with chunk_size=50, overlap=10")
+    # Initialize splitter with reasonable parameters
+    splitter = TextSplitter(chunk_size=50, overlap=10)
+    print(f"\n🔄 Splitting with chunk_size=50, overlap=10")
 
-    # Chunk the text
-    chunks = chunker.chunk_text(chinese_text, "ai_article")
+    # Split the text into chunks
+    chunks = splitter.chunk_text(chinese_text, "ai_article")
 
     print(f"\n📊 Created {len(chunks)} chunks:")
     for i, chunk in enumerate(chunks):

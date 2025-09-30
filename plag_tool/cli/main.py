@@ -142,7 +142,7 @@ def analyze(file_path: Path, chunk_size: int, overlap: int, sentence_boundaries:
 
     FILE_PATH: Path to the file to analyze
     """
-    from ..core import TextChunker
+    from ..core import TextSplitter
 
     click.echo(f"📊 Analyzing file: {file_path}")
 
@@ -154,14 +154,14 @@ def analyze(file_path: Path, chunk_size: int, overlap: int, sentence_boundaries:
         click.echo(f"Error reading file: {str(e)}", err=True)
         sys.exit(1)
 
-    # Create chunker
-    chunker = TextChunker(chunk_size=chunk_size, overlap=overlap)
+    # Create splitter
+    splitter = TextSplitter(chunk_size=chunk_size, overlap=overlap)
 
-    # Chunk text
+    # Split text into chunks
     if sentence_boundaries:
-        chunks = chunker.chunk_with_sentences(text, "analysis")
+        chunks = splitter.chunk_with_sentences(text, "analysis")
     else:
-        chunks = chunker.chunk_text(text, "analysis")
+        chunks = splitter.chunk_text(text, "analysis")
 
     # Display statistics
     click.echo(f"\n📈 Chunking Statistics:")
