@@ -1,38 +1,8 @@
 """Text splitting module for splitting documents into overlapping segments."""
 
-import hashlib
-from typing import List, Optional
-from pydantic import BaseModel, Field
+from typing import List
 
-
-class TextChunk(BaseModel):
-    """Represents a chunk of text with metadata."""
-
-    text: str = Field(description="The actual text content of the chunk")
-    start_pos: int = Field(description="Starting position in the original text")
-    end_pos: int = Field(description="Ending position in the original text")
-    doc_id: str = Field(description="Identifier of the source document")
-    chunk_index: int = Field(description="Index of this chunk in the document")
-    chunk_hash: str = Field(default="", description="Hash of the chunk text")
-
-    def __init__(self, **data):
-        """Initialize a TextChunk and compute its hash."""
-        super().__init__(**data)
-        if not self.chunk_hash:
-            self.chunk_hash = self._compute_hash()
-
-    def _compute_hash(self) -> str:
-        """Compute SHA256 hash of the chunk text."""
-        return hashlib.sha256(self.text.encode('utf-8')).hexdigest()[:16]
-
-    def overlaps_with(self, other: 'TextChunk', tolerance: int = 0) -> bool:
-        """Check if this chunk overlaps with another chunk."""
-        if self.doc_id != other.doc_id:
-            return False
-        return (
-            (self.start_pos <= other.start_pos <= self.end_pos + tolerance) or
-            (other.start_pos <= self.start_pos <= other.end_pos + tolerance)
-        )
+from .types import TextChunk
 
 
 class TextSplitter:

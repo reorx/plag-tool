@@ -6,39 +6,13 @@ from typing import List, Tuple, Optional, Dict, Any
 from pydantic import BaseModel, Field
 
 from .config import Config
-from .splitter import TextChunk, TextSplitter
+from .types import TextChunk, Match, PlagiarismReport
+from .splitter import TextSplitter
 from .embeddings import EmbeddingService
 from .vector_store import VectorStore, SimilarityMatch
 from .log import base_logger
 
 logger = base_logger.getChild('detector')
-
-
-class Match(BaseModel):
-    """Represents a plagiarism match between source and target texts."""
-
-    source_text: str = Field(description="Source text segment")
-    source_start: int = Field(description="Start position in source document")
-    source_end: int = Field(description="End position in source document")
-    target_text: str = Field(description="Target text segment")
-    target_start: int = Field(description="Start position in target document")
-    target_end: int = Field(description="End position in target document")
-    similarity: float = Field(description="Similarity score (0-1)")
-    exact_matches: List[str] = Field(default_factory=list, description="List of exact matching phrases")
-
-
-class PlagiarismReport(BaseModel):
-    """Complete plagiarism detection report."""
-
-    source_file: str = Field(description="Path to source file")
-    target_file: str = Field(description="Path to target file")
-    total_matches: int = Field(description="Total number of matches found")
-    plagiarism_percentage: float = Field(description="Percentage of source text that is plagiarized")
-    matches: List[Match] = Field(default_factory=list, description="List of all matches")
-    source_length: int = Field(description="Total length of source text")
-    target_length: int = Field(description="Total length of target text")
-    detection_threshold: float = Field(description="Similarity threshold used for detection")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
 
 class PlagiarismDetector:
