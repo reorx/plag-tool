@@ -1,10 +1,11 @@
 """Rich-based display module for plagiarism detection results."""
 
 from typing import List
-from rich.console import Console, RenderableType
+from rich.console import Console, RenderableType, Group
 from rich.text import Text
 from rich.style import Style
 from rich.table import Table
+from rich.panel import Panel
 
 from ..core.types import Match, PlagiarismReport
 
@@ -26,8 +27,8 @@ def comparison(renderable1: RenderableType, renderable2: RenderableType) -> Tabl
         A Table with two equal-width columns
     """
     table = Table(show_header=False, pad_edge=False, box=None, expand=True)
-    table.add_column("1", ratio=1)
-    table.add_column("2", ratio=1)
+    table.add_column("1", ratio=1, no_wrap=False)
+    table.add_column("2", ratio=1, no_wrap=False)
     table.add_row(renderable1, renderable2)
     return table
 
@@ -46,8 +47,8 @@ def highlight_exact_matches(text: str, exact_matches: List[str]) -> Text:
     # Sort matches by length (longest first) to handle overlapping matches
     sorted_matches = sorted(exact_matches, key=len, reverse=True)
 
-    # Create rich Text object
-    rich_text = Text(text)
+    # Create rich Text object with proper overflow handling
+    rich_text = Text(text, no_wrap=True)
 
     # Track which parts of the text have been highlighted
     highlighted_ranges = []
@@ -81,7 +82,7 @@ def highlight_exact_matches(text: str, exact_matches: List[str]) -> Text:
 
     # Rebuild text with highlights
     if highlighted_ranges:
-        rich_text = Text()
+        rich_text = Text(overflow="fold")
         last_pos = 0
 
         for start, end in highlighted_ranges:
@@ -154,7 +155,7 @@ def get_similarity_style(similarity: float) -> Style:
     if similarity >= 0.95:
         return Style(color="red", bold=True)
     elif similarity >= 0.85:
-        return Style(color="yellow", bold=True)
+        return Style(color="magenta", bold=True)
     else:
         return Style(color="cyan", bold=True)
 
@@ -179,8 +180,6 @@ def display_match(console: Console, match: Match, index: int, max_text_length: i
     header.append(similarity_pct, style=similarity_style)
     header.append(" similar")
 
-    console.print(header)
-
     # Truncate texts if needed
     source_text = truncate_with_highlights(match.source_text, match.exact_matches, max_text_length)
     target_text = truncate_with_highlights(match.target_text, match.exact_matches, max_text_length)
@@ -194,29 +193,35 @@ def display_match(console: Console, match: Match, index: int, max_text_length: i
     target_label = Text(f"Target [{match.target_start}:{match.target_end}]:", style="dim")
 
     # Combine label and text for each column
-    source_content = Text()
-    source_content.append_text(source_label)
+    source_content = Text(overflow="fold")
+    source_content.append(source_label)
     source_content.append("\n")
-    source_content.append_text(source_highlighted)
+    source_content.append(source_highlighted)
 
-    target_content = Text()
-    target_content.append_text(target_label)
+    target_content = Text(overflow="fold")
+    target_content.append(target_label)
     target_content.append("\n")
-    target_content.append_text(target_highlighted)
+    target_content.append(target_highlighted)
 
     # Display side-by-side comparison
-    console.print(comparison(source_content, target_content))
+    console.print(
+        Panel(
+            comparison(source_content, target_content),
+            title=header,
+            title_align='left',
+        )
+    )
 
     # Display exact matches if any
-    if match.exact_matches:
-        console.print(f"Exact phrases: ", style="dim", end="")
-        for i, phrase in enumerate(match.exact_matches[:3]):
-            if i > 0:
-                console.print(", ", end="")
-            console.print(phrase, style="yellow", end="")
-        if len(match.exact_matches) > 3:
-            console.print(f" (+{len(match.exact_matches) - 3} more)", style="dim", end="")
-        console.print()  # newline
+    #if match.exact_matches:
+    #    console.print(f"Exact phrases: ", style="dim", end="")
+    #    for i, phrase in enumerate(match.exact_matches[:3]):
+    #        if i > 0:
+    #            console.print(", ", end="")
+    #        console.print(phrase, style="yellow", end="")
+    #    if len(match.exact_matches) > 3:
+    #        console.print(f" (+{len(match.exact_matches) - 3} more)", style="dim", end="")
+    #    console.print()  # newline
 
     console.print()  # Empty line between matches
 
