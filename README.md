@@ -2,6 +2,8 @@
 
 A powerful plagiarism detection tool for Chinese and English text using vector embeddings and semantic similarity.
 
+![](./docs/screenshot.png)
+
 ## Features
 
 - 🌏 **Multilingual Support**: Optimized for both Chinese and English text
