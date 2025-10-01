@@ -1,2 +1,3 @@
 - better to use langchain's recursive splitter, and only split lines
+- or use haystack's ChineseDocumentSplitter: https://github.com/deepset-ai/haystack-core-integrations/blob/main/integrations/hanlp/src/haystack_integrations/components/preprocessors/hanlp/chinese_document_splitter.py
 - use jieba to enhance exact match words find
