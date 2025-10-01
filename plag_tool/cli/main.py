@@ -45,6 +45,7 @@ def cli():
 @click.option('--base-url', envvar='OPENAI_BASE_URL', help='OpenAI base URL (can be set via OPENAI_BASE_URL env var)')
 @click.option('--model', envvar='OPENAI_DEFAULT_EMBEDDING_MODEL', default='text-embedding-3-small', help='Embedding model to use')
 @click.option('--no-rich-display', is_flag=True, help='Disable rich formatted output')
+@click.option('--force-embed', is_flag=True, help='Force re-embedding even if embeddings exist in database')
 def compare(
     source_file: Path,
     target_file: Path,
@@ -58,7 +59,8 @@ def compare(
     api_key: str,
     base_url: str,
     model: str,
-    no_rich_display: bool
+    no_rich_display: bool,
+    force_embed: bool
 ):
     """
     Compare two files for plagiarism detection.
@@ -111,7 +113,8 @@ def compare(
             report = detector.compare_documents(
                 str(source_file),
                 str(target_file),
-                use_sentence_boundaries=sentence_boundaries
+                use_sentence_boundaries=sentence_boundaries,
+                force_embed=force_embed
             )
             bar.update(90)
         except Exception as e:

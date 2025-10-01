@@ -52,13 +52,13 @@ class VectorStore:
         self.collection = None
         self.collection_name = None
 
-    def create_collection(self, name: Optional[str] = None, reset: bool = True):
+    def create_collection(self, name: Optional[str] = None, reset: bool = False):
         """
         Create or get a collection for storing vectors.
 
         Args:
             name: Collection name (auto-generated if not provided)
-            reset: Whether to delete existing collection with same name
+            reset: Whether to delete existing collection with same name (default: False)
         """
         if name is None:
             name = f"plagiarism_{uuid.uuid4().hex[:8]}"
@@ -263,6 +263,26 @@ class VectorStore:
             self.collection.delete(ids=all_ids)
             logger.info(f"Cleared {len(all_ids)} documents from collection")
 
+    def has_document(self, doc_id: str) -> bool:
+        """
+        Check if a document exists in the collection.
+
+        Args:
+            doc_id: Document identifier
+
+        Returns:
+            True if document has chunks in the collection
+        """
+        if not self.collection:
+            return False
+
+        results = self.collection.get(
+            where={"doc_id": doc_id},
+            limit=1
+        )
+
+        return bool(results and results['ids'] and len(results['ids']) > 0)
+
     def get_document_chunks(self, doc_id: str) -> List[Dict[str, Any]]:
         """
         Retrieve all chunks for a specific document.
@@ -291,5 +311,41 @@ class VectorStore:
 
         # Sort by chunk_index
         chunks.sort(key=lambda x: x['metadata'].get('chunk_index', 0))
+
+        return chunks
+
+    def get_document_text_chunks(self, doc_id: str) -> List[TextChunk]:
+        """
+        Retrieve all chunks for a document as TextChunk objects.
+
+        Args:
+            doc_id: Document identifier
+
+        Returns:
+            List of TextChunk objects
+        """
+        if not self.collection:
+            raise RuntimeError("Collection not initialized")
+
+        results = self.collection.get(
+            where={"doc_id": doc_id}
+        )
+
+        chunks = []
+        if results and results['ids']:
+            for i in range(len(results['ids'])):
+                metadata = results['metadatas'][i] if results['metadatas'] else {}
+                chunk = TextChunk(
+                    text=metadata.get('text', ''),
+                    start_pos=metadata.get('start_pos', 0),
+                    end_pos=metadata.get('end_pos', 0),
+                    doc_id=metadata.get('doc_id', doc_id),
+                    chunk_index=metadata.get('chunk_index', i),
+                    chunk_hash=metadata.get('chunk_hash', '')
+                )
+                chunks.append(chunk)
+
+        # Sort by chunk_index
+        chunks.sort(key=lambda x: x.chunk_index)
 
         return chunks

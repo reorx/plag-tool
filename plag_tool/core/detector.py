@@ -74,7 +74,8 @@ class PlagiarismDetector:
         self,
         source_file: str,
         target_file: str,
-        use_sentence_boundaries: bool = True
+        use_sentence_boundaries: bool = True,
+        force_embed: bool = False
     ) -> PlagiarismReport:
         """
         Compare two documents for plagiarism.
@@ -83,6 +84,7 @@ class PlagiarismDetector:
             source_file: Path to source document
             target_file: Path to target document
             use_sentence_boundaries: Whether to use sentence-aware chunking
+            force_embed: Force re-embedding even if embeddings exist
 
         Returns:
             PlagiarismReport with detection results
@@ -93,30 +95,65 @@ class PlagiarismDetector:
         source_text = self.read_file(source_file)
         target_text = self.read_file(target_file)
 
-        # Create unique collection for this comparison
-        import time
-        collection_name = f"compare_{int(time.time() * 1000)}"
-        self.vector_store.create_collection(collection_name)
+        # Create stable collection name based on chunking parameters
+        import hashlib
+        params_str = f"{self.config.chunk_size}_{self.config.overlap_size}_{use_sentence_boundaries}"
+        params_hash = hashlib.md5(params_str.encode()).hexdigest()[:8]
+        collection_name = f"plag_{params_hash}"
 
-        # Split texts into chunks
-        if use_sentence_boundaries:
-            source_chunks = self.splitter.chunk_with_sentences(source_text, "source")
-            target_chunks = self.splitter.chunk_with_sentences(target_text, "target")
+        # Create or get collection (non-destructive by default)
+        self.vector_store.create_collection(collection_name, reset=force_embed)
+
+        # Check if documents already have embeddings
+        source_exists = self.vector_store.has_document("source")
+        target_exists = self.vector_store.has_document("target")
+
+        # Process source document
+        if not force_embed and source_exists:
+            logger.info("Using existing source embeddings from database")
+            source_chunks = self.vector_store.get_document_text_chunks("source")
         else:
-            source_chunks = self.splitter.chunk_text(source_text, "source")
-            target_chunks = self.splitter.chunk_text(target_text, "target")
-        print('source_chunks', source_chunks)
+            logger.info(f"Splitting and embedding source document (force_embed={force_embed})")
+            if use_sentence_boundaries:
+                source_chunks = self.splitter.chunk_with_sentences(source_text, "source")
+            else:
+                source_chunks = self.splitter.chunk_text(source_text, "source")
 
-        logger.info(f"Created {len(source_chunks)} source chunks and {len(target_chunks)} target chunks")
+        # Process target document
+        if not force_embed and target_exists:
+            logger.info("Using existing target embeddings from database")
+            target_chunks = self.vector_store.get_document_text_chunks("target")
+        else:
+            logger.info(f"Splitting and embedding target document (force_embed={force_embed})")
+            if use_sentence_boundaries:
+                target_chunks = self.splitter.chunk_with_sentences(target_text, "target")
+            else:
+                target_chunks = self.splitter.chunk_text(target_text, "target")
 
-        # Generate embeddings for target and store in vector database
-        logger.info("Generating target embeddings...")
-        target_embeddings = self.embedder.embed_chunks(target_chunks)
-        self.vector_store.add_documents(target_chunks, target_embeddings)
+        logger.info(f"Using {len(source_chunks)} source chunks and {len(target_chunks)} target chunks")
+
+        # Generate and store embeddings for target if not using cached
+        if force_embed or not target_exists:
+            logger.info("Generating target embeddings...")
+            target_embeddings = self.embedder.embed_chunks(target_chunks)
+            # Delete existing target chunks if force_embed
+            if force_embed and target_exists:
+                self._delete_document_chunks("target")
+            self.vector_store.add_documents(target_chunks, target_embeddings)
 
         # Generate embeddings for source and find matches
-        logger.info("Generating source embeddings and finding matches...")
-        source_embeddings = self.embedder.embed_chunks(source_chunks)
+        if force_embed or not source_exists:
+            logger.info("Generating source embeddings and finding matches...")
+            source_embeddings = self.embedder.embed_chunks(source_chunks)
+            # Delete existing source chunks if force_embed
+            if force_embed and source_exists:
+                self._delete_document_chunks("source")
+            # Store source embeddings for future use
+            self.vector_store.add_documents(source_chunks, source_embeddings)
+        else:
+            logger.info("Generating source embeddings for matching...")
+            source_embeddings = self.embedder.embed_chunks(source_chunks)
+
         matches = self.find_matches(source_chunks, source_embeddings)
 
         # Calculate plagiarism statistics
@@ -352,6 +389,24 @@ class PlagiarismDetector:
 
         # No overlap found, concatenate with separator
         return text1 + " ... " + text2
+
+    def _delete_document_chunks(self, doc_id: str):
+        """
+        Delete all chunks for a specific document from the vector store.
+
+        Args:
+            doc_id: Document identifier
+        """
+        if not self.vector_store.collection:
+            return
+
+        results = self.vector_store.collection.get(
+            where={"doc_id": doc_id}
+        )
+
+        if results and results['ids']:
+            self.vector_store.collection.delete(ids=results['ids'])
+            logger.info(f"Deleted {len(results['ids'])} existing chunks for doc_id={doc_id}")
 
     def _calculate_matched_characters(self, matches: List[Match]) -> int:
         """
